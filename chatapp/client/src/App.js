@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import "./App.css";
 import io from "socket.io-client";
 import Picker from "emoji-picker-react";
-const socket = io("http://localhost:5000");
+const backend_url = "http://localhost:5000";
+// const backend_url = "https://chat-app-backend-100822.herokuapp.com/";
+const socket = io(backend_url);
 
 function App() {
   const [socketId, setSocketId] = useState("");
@@ -94,110 +95,195 @@ function App() {
 
   return (
     <>
-      <h1 className="main_heading">Chat App</h1>
-      <h1 className="my_socket">Me: {socketId}</h1>
-      <h3 className="roomjoined">
-        {joinedRoom === true
-          ? `Room: ${room}`
-          : "You are not joined in any room"}
-      </h3>
-
-      {!joinedRoom && (
-        <div className="container">
-          <div className="users-container">
-            <h2 className="users_heading">Online Users:</h2>
-            <ul className="users">
-              {users.map((user) => {
-                return (
-                  <li className="user" key={user}>
-                    {user && user === socketId ? `*ME*` : user}
-                  </li>
-                );
-              })}
+      <nav className="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div className="container-fluid">
+          <a className="navbar-brand" href="/">
+            Annonymous Chat App
+          </a>
+          <button
+            className="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span className="navbar-toggler-icon"></span>
+          </button>
+          <div className="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+              <li className="nav-item">
+                <a className="nav-link active" aria-current="page" href="/">
+                  Home
+                </a>
+              </li>
             </ul>
+            <span className="navbar-text float-end">Me: {socketId}</span>
           </div>
-          <div className="rooms-container">
-            <h2 className="rooms_heading">Available Rooms:</h2>
-
-            {rooms.length === 0 ? (
-              <h3 className="no_rooms">No Rooms! Create a room !</h3>
-            ) : (
-              <ul className="rooms">
-                {rooms.map((room) => {
-                  return (
-                    <li key={room.id} onClick={() => joinRoom(room)}>
-                      {room.id}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-            <div className="btn-container">
-              <button className="btn" onClick={() => createRoom()}>
-                Create Room
-              </button>
+        </div>
+      </nav>
+      <div className="container">
+        <div className="row">
+          <div className="col">
+            <div className="alert alert-warning" role="alert">
+              {joinedRoom === true
+                ? `Room: ${room}`
+                : "You are not joined in any room"}
             </div>
           </div>
         </div>
-      )}
-
-      {joinedRoom && (
-        <>
-          <div className="chat-container">
-            <ul className="chat-list" id="chat-list" ref={chatContainer}>
-              {chat.map((chat, idx) => (
-                <li
-                  key={idx}
-                  className={chat.writer === socketId ? "chat-me" : "chat-user"}
-                >
-                  {chat.writer === socketId
-                    ? `${chat.message}: ME*`
-                    : `User (${chat.writer.slice(0, 5)}): ${chat.message}`}
-                </li>
-              ))}
-            </ul>
+        {!joinedRoom && (
+          <div className="row">
+            <div className="col">
+              <div className="card">
+                <div className="card-header">Online Users:</div>
+                <div className="card-body">
+                  <ul className="users">
+                    {users.map((user) => {
+                      return (
+                        <li className="user" key={user}>
+                          {user && user === socketId ? `*ME*` : user}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className="col">
+              <div className="card">
+                <div className="card-header">Available Rooms:</div>
+                <div className="card-body">
+                  {rooms.length === 0 ? (
+                    <h3 className="no_rooms">No Rooms! Create a room !</h3>
+                  ) : (
+                    <ul className="rooms">
+                      {rooms.map((room) => {
+                        return (
+                          <li
+                            className="link-primary"
+                            key={room.id}
+                            onClick={() => joinRoom(room)}
+                          >
+                            {room.id}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+                <div className="card-footer">
+                  <button
+                    className="btn btn-success float-end"
+                    onClick={() => createRoom()}
+                  >
+                    Create Room
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
+        )}
 
-          <form className="chat-form" onSubmit={(e) => e.preventDefault()}>
-            <input
-              type="text"
-              placeholder="Your message ..."
-              autoFocus
-              onChange={(e) => {
-                setMessage(e.target.value);
-              }}
-              value={message}
-            />
+        {joinedRoom && (
+          <>
+            <div className="row">
+              <div className="col">
+                <ul
+                  className="chat-list"
+                  style={{ "list-style": "none" }}
+                  id="chat-list"
+                  ref={chatContainer}
+                >
+                  {chat.map((chat, idx) => (
+                    <li
+                      key={idx}
+                      className={
+                        chat.writer === socketId
+                          ? "chat-me text-end"
+                          : "chat-user text-start"
+                      }
+                    >
+                      {chat.writer === socketId ? (
+                        <h3>
+                          Me:{" "}
+                          <span class="badge text-bg-light">
+                            {chat.message}
+                          </span>
+                        </h3>
+                      ) : (
+                        <h4>
+                          {chat.writer.slice(0, 5)}:{" "}
+                          <span class="badge text-bg-dark">{chat.message}</span>
+                        </h4>
+                      )}
+                      <hr />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
 
-            <button
-              className="emoji_btn"
-              type="button"
-              onClick={() => setShowEmoji(!showEmoji)}
-            >
-              Emoji
-            </button>
-            <button
-              className="send_btn"
-              type="submit"
-              onClick={() => sendMessage()}
-            >
-              Send
-            </button>
-          </form>
-          {showEmoji && (
-            <Picker
-              onEmojiClick={onEmojiClick}
-              pickerStyle={{
-                width: "20%",
-                display: "absolute",
-                left: "0",
-                bottom: "270px",
-                backgroundColor: "#fff",
-              }}
-            />
-          )}
-        </>
-      )}
+            <div className="row">
+              <div className="col">
+                <form
+                  className="chat-form"
+                  onSubmit={(e) => e.preventDefault()}
+                >
+                  <div className="row mb-2">
+                    <div className="col">
+                      <input
+                        className="form-control"
+                        type="text"
+                        placeholder="Your message ..."
+                        autoFocus
+                        onChange={(e) => {
+                          setMessage(e.target.value);
+                        }}
+                        value={message}
+                      />
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div className="col">
+                      <div className="float-end">
+                        <button
+                          className="btn btn-info"
+                          type="button"
+                          onClick={() => setShowEmoji(!showEmoji)}
+                          style={{ "margin-right": "5px" }}
+                        >
+                          Emoji
+                        </button>
+                        <button
+                          className="btn btn-primary"
+                          type="submit"
+                          onClick={() => sendMessage()}
+                        >
+                          Send
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+                {showEmoji && (
+                  <Picker
+                    onEmojiClick={onEmojiClick}
+                    pickerStyle={{
+                      width: "20%",
+                      display: "absolute",
+                      left: "0",
+                      bottom: "270px",
+                      backgroundColor: "#fff",
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
     </>
   );
 }
